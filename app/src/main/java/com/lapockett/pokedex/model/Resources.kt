@@ -41,6 +41,7 @@ data class Colors(
     val darkColor : Color = Color(0xFF6F5747),
     val steelColor : Color = Color(0xffb7b7ce),
     val normalColor : Color = Color(0xffa7a777),
-    val fairyColor : Color = Color(0xffec98ab)
+    val fairyColor : Color = Color(0xffec98ab),
+    val pokemonIdColor : Color = Color(0xda5e5d5d)
 )
 val LocalColors = compositionLocalOf { Colors() }

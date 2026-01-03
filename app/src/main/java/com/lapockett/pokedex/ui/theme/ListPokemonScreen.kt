@@ -1,7 +1,10 @@
 package com.lapockett.pokedex.ui.theme
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,103 +14,167 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import coil3.compose.AsyncImage
 import com.lapockett.pokedex.data.RetrofitServiceFactory
+import com.lapockett.pokedex.model.LocalColors
+import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.PokemonDetailsUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
+import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
 
 @Preview
 @Composable
 fun ListPokemonScreen(){
+    val paddingValues = LocalPadding.current
+
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
     val repository = remember { PokemonRepositoryImpl(api) }
     val viewModel = remember { PokemonVM(repository) }
 
     val pokemonList by viewModel.pokemonList.collectAsState()
+    // Variable para detectar el scroll
+    val scrollState = rememberLazyGridState()
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        items(items = pokemonList) { index ->
-            PokemonItem(index)
-        }
+    LaunchedEffect(scrollState) {
+        snapshotFlow { scrollState.layoutInfo }
+            .collect { layoutInfo ->
+                val totalItems = layoutInfo.totalItemsCount
+                val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                if (lastVisibleIndex >= totalItems - 4) {
+                    viewModel.loadPokemon()
+                }
+            }
     }
+
+    PokedexTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.onSurfaceVariant)
+                .padding(horizontal = paddingValues.tiny)
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                state = scrollState,
+            ) {
+                items(items = pokemonList) { index ->
+                    PokemonItem(index)
+                }
+            }
+        }
+
+    }
+}
+@SuppressLint("DefaultLocale")
+fun formatPokemonId(
+    pokemonId: Int
+): String {
+    //return String.format("#%03d", pokemonId)
+    if (pokemonId < 10) {
+        return "#00$pokemonId"
+    } else if (pokemonId < 100) {
+        return "#0$pokemonId"
+    }
+    return "#$pokemonId"
 }
 
 @Composable
 fun PokemonItem(pokemon: PokemonDetailsUI){
+    val paddingValues = LocalPadding.current
+    val colorValues = LocalColors.current
+
     Card(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
             .fillMaxWidth()
-            .padding(16.dp),
-        onClick = { }
+            .padding(paddingValues.extraTiny),
+        onClick = { },
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.onPrimary)
+                .padding(paddingValues.tiny)
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = pokemon.id.toString(),
-                    fontSize = 14.sp,
-                )
-                Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = null,
-                )
-            }
-            AsyncImage(
-                model = pokemon.imageUrl,
-                contentDescription = pokemon.name,
-                modifier = Modifier.size(100.dp),
-                onError = {
-                    println("Error loading image: ${it.result.throwable.message}")
-                }
-            )
-
-            Text(
-                text = pokemon.name.replaceFirstChar { it.uppercase() },
-                fontSize = 22.sp,
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                pokemon.types.take(2).forEach { type ->
-                    AssistChip(
-                        onClick = {},
-                        label = { Text(text = type.type.name.replaceFirstChar { it.uppercase() }, fontSize = 13.sp) },
-                        modifier = Modifier.wrapContentWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = formatPokemonId(pokemon.id),
+                        fontSize = 14.sp,
+                        color = colorValues.pokemonIdColor
                     )
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                    )
+                }
+                AsyncImage(
+                    model = pokemon.imageUrl,
+                    contentDescription = pokemon.name,
+                    modifier = Modifier.size(100.dp),
+                    onError = {
+                        println("Error loading image: ${it.result.throwable.message}")
+                    }
+                )
+
+                Text(
+                    text = pokemon.name.replaceFirstChar { it.uppercase() },
+                    fontSize = 20.sp,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    pokemon.types.take(2).forEach { type ->
+                        val backgroundColor = pokemonTypeToColor(type.type.name)
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(text = type.type.name.replaceFirstChar { it.uppercase() }, fontSize = 13.sp) },
+                            modifier = Modifier.wrapContentWidth(),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = backgroundColor,
+                                labelColor = MaterialTheme.colorScheme.onPrimary,
+
+                            )
+                        )
+                    }
                 }
             }
         }
+
     }
 }

@@ -17,12 +17,25 @@ class PokemonVM(
         MutableStateFlow<List<PokemonDetailsUI>>(emptyList())
     val pokemonList: StateFlow<List<PokemonDetailsUI>> = _pokemonList
 
+    private var offset = 0
+    private val limit = 20
+    private var isLoading = false
+    private var hasMore = true
+
     init {
         loadPokemon()
     }
-    private fun loadPokemon() {
+    fun loadPokemon() {
+        if (isLoading || !hasMore) return
+        isLoading = true
+
         viewModelScope.launch {
-            val listResponse = repository.getPokemonList(0, 20)
+            val listResponse = repository.getPokemonList(offset, limit)
+            if(listResponse.results.isEmpty()){
+                hasMore = false
+                isLoading = false
+                return@launch
+            }
 
             val detailedList = listResponse.results.map { result ->
                 val detail = repository.getPokemonByName(result.name)
@@ -34,7 +47,9 @@ class PokemonVM(
                     types = getPokemonTypes(detail.types)
                 )
             }
-            _pokemonList.value = detailedList
+            _pokemonList.value += detailedList
+            offset += limit
+            isLoading = false
         }
     }
     private fun getPokemonTypes(types: List<Type>): List<Type>{
