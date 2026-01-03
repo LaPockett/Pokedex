@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
 import com.lapockett.pokedex.data.RetrofitServiceFactory
+import com.lapockett.pokedex.ui.theme.ListPokemonScreen
 import com.lapockett.pokedex.ui.theme.PokedexTheme
 import kotlinx.coroutines.launch
 
@@ -27,29 +28,8 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             PokedexTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                    ListPokemonScreen()
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PokedexTheme {
-        Greeting("Android")
     }
 }

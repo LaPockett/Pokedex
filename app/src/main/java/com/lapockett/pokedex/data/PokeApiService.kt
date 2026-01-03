@@ -1,28 +1,30 @@
 package com.lapockett.pokedex.data
 
-import com.lapockett.pokedex.model.Pokemon
+import com.lapockett.pokedex.model.PokemonResponse
+import com.lapockett.pokedex.models.PokemonDetailsUI
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface RetrofitService {
+interface PokeApiService {
     @GET("pokemon")
     suspend fun getPokemon(
         @Query("offset") offset: Int,
         @Query("limit") limit: Int
-    ): Pokemon
+    ): PokemonResponse
 
     @GET("pokemon/{name}")
-    suspend fun getPokemonByName(@Path("name") name: String): Pokemon
+    suspend fun getPokemonByName(@Path("name") name: String): PokemonDetailsUI
+
 }
 
 object RetrofitServiceFactory {
-    fun makeRetrofitService(): RetrofitService {
+    fun makeRetrofitService(): PokeApiService {
         return Retrofit.Builder()
             .baseUrl("https://pokeapi.co/api/v2/")
             .addConverterFactory(GsonConverterFactory.create())
-            .build().create(RetrofitService::class.java)
+            .build().create(PokeApiService::class.java)
     }
 }

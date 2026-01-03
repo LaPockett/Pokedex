@@ -1,6 +1,6 @@
 package com.lapockett.pokedex.model
 
-data class Result(
+data class PokemonResult(
     val name: String,
     val url: String
 )
