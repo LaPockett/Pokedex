@@ -2,12 +2,11 @@ package com.lapockett.pokedex.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,19 +38,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.lapockett.pokedex.data.RetrofitServiceFactory
 import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
-import com.lapockett.pokedex.models.PokemonDetailsUI
+import com.lapockett.pokedex.models.PokemonListDetailsUI
+import com.lapockett.pokedex.models.Type
+import com.lapockett.pokedex.models.TypeX
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
 import com.lapockett.pokedex.ui.theme.PokedexTheme
+import com.lapockett.pokedex.utils.formatPokemonId
 import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
 
-@Preview
+
 @Composable
-fun ListPokemonScreen(){
+fun ListPokemonScreen(navController: NavController) {
     val paddingValues = LocalPadding.current
 
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
@@ -83,30 +86,28 @@ fun ListPokemonScreen(){
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 state = scrollState,
+                modifier = Modifier.clickable(
+                    onClick = {
+                        navController.navigate(Screen.Detail.route)
+                    }
+                )
             ) {
-                items(items = pokemonList) { index ->
-                    PokemonItem(index)
+                items(items = pokemonList) { pokemon ->
+                    PokemonItem(pokemon,
+                        onClick = {
+                            navController.navigate(Screen.Detail.createRoute(pokemon.id))
+                        })
                 }
             }
         }
 
     }
 }
-@SuppressLint("DefaultLocale")
-fun formatPokemonId(
-    pokemonId: Int
-): String {
-    //return String.format("#%03d", pokemonId)
-    if (pokemonId < 10) {
-        return "#00$pokemonId"
-    } else if (pokemonId < 100) {
-        return "#0$pokemonId"
-    }
-    return "#$pokemonId"
-}
 
 @Composable
-fun PokemonItem(pokemon: PokemonDetailsUI){
+fun PokemonItem(
+    pokemon: PokemonListDetailsUI,
+    onClick: () -> Unit) {
     val paddingValues = LocalPadding.current
     val colorValues = LocalColors.current
     var isFavorite by remember { mutableStateOf(false) }
@@ -115,8 +116,8 @@ fun PokemonItem(pokemon: PokemonDetailsUI){
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(paddingValues.extraTiny),
-        onClick = { },
+            .padding(paddingValues.extraTiny)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
     ) {
         Box(
@@ -124,7 +125,7 @@ fun PokemonItem(pokemon: PokemonDetailsUI){
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.onPrimary)
                 .padding(paddingValues.tiny)
-        ){
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -179,13 +180,18 @@ fun PokemonItem(pokemon: PokemonDetailsUI){
                         val backgroundColor = pokemonTypeToColor(type.type.name)
                         AssistChip(
                             onClick = {},
-                            label = { Text(text = type.type.name.replaceFirstChar { it.uppercase() }, fontSize = 13.sp) },
+                            label = {
+                                Text(
+                                    text = type.type.name.replaceFirstChar { it.uppercase() },
+                                    fontSize = 13.sp
+                                )
+                            },
                             modifier = Modifier.wrapContentWidth(),
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = backgroundColor,
                                 labelColor = MaterialTheme.colorScheme.onPrimary,
 
-                            )
+                                )
                         )
                     }
                 }

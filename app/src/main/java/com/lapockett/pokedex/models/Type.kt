@@ -6,7 +6,7 @@ data class Type(
 )
 
 
-data class PokemonDetailsUI(
+data class PokemonListDetailsUI(
     val id: Int,
     val name: String,
     val types: List<Type>,
