@@ -1,4 +1,4 @@
-package com.lapockett.pokedex.ui.theme
+package com.lapockett.pokedex.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,19 +20,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +45,7 @@ import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.PokemonDetailsUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
+import com.lapockett.pokedex.ui.theme.PokedexTheme
 import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
 
@@ -106,6 +109,8 @@ fun formatPokemonId(
 fun PokemonItem(pokemon: PokemonDetailsUI){
     val paddingValues = LocalPadding.current
     val colorValues = LocalColors.current
+    var isFavorite by remember { mutableStateOf(false) }
+
 
     Card(
         modifier = Modifier
@@ -136,10 +141,21 @@ fun PokemonItem(pokemon: PokemonDetailsUI){
                         fontSize = 14.sp,
                         color = colorValues.pokemonIdColor
                     )
-                    Icon(
-                        imageVector = Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                    )
+                    IconButton(
+                        onClick = {
+                            isFavorite = !isFavorite
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector =
+                                if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            tint =
+                                if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                 }
                 AsyncImage(
                     model = pokemon.imageUrl,
