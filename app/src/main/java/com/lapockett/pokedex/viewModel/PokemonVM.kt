@@ -62,7 +62,7 @@ class PokemonVM(
                 PokemonListDetailsUI(
                     id = detail.id,
                     name = detail.name,
-                    imageUrl = getPokemonImage(detail.id),
+                    imageUrl = getPokemonDefaultImage(detail.id),
                     types = getPokemonTypes(detail.types)
                 )
             }
@@ -80,7 +80,7 @@ class PokemonVM(
                 weight = detail.weight,
                 baseExperience = detail.baseExperience,
                 name = detail.name,
-                imageUrl = getPokemonImage(detail.id),
+                imageUrl = getPokemonDefaultImage(detail.id),
                 types = getPokemonTypes(detail.types),
                 stats = getPokemonStats(detail.stats),
                 abilities = getPokemonAbilities(detail.abilities)
@@ -116,7 +116,7 @@ class PokemonVM(
         }
     }
 
-    private fun getPokemonImage(id: Int): String {
+    private fun getPokemonDefaultImage(id: Int): String {
         return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png"
     }
 }

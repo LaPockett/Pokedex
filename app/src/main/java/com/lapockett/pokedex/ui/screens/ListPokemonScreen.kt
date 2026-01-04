@@ -48,7 +48,7 @@ import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
 
 @Composable
-fun ListPokemonScreen(navController: NavController) {
+fun ListPokemonScreen(navController: NavController, isShiny: Boolean) {
     val paddingValues = LocalPadding.current
 
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
@@ -87,6 +87,7 @@ fun ListPokemonScreen(navController: NavController) {
             items(items = pokemonList) { pokemon ->
                 PokemonItem(
                     pokemon,
+                    isShiny = isShiny,
                     onClick = {
                         navController.navigate(Screen.Detail.createRoute(pokemon.id))
                     })
@@ -99,11 +100,17 @@ fun ListPokemonScreen(navController: NavController) {
 @Composable
 fun PokemonItem(
     pokemon: PokemonListDetailsUI,
+    isShiny: Boolean,
     onClick: () -> Unit
 ) {
     val paddingValues = LocalPadding.current
     val colorValues = LocalColors.current
     var isFavorite by remember { mutableStateOf(false) }
+    val imageUrl = if (isShiny) {
+        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemon.id}.png"
+    } else {
+        pokemon.imageUrl
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -150,7 +157,7 @@ fun PokemonItem(
 
                 }
                 AsyncImage(
-                    model = pokemon.imageUrl,
+                    model = imageUrl,
                     contentDescription = pokemon.name,
                     modifier = Modifier.size(100.dp),
                     onError = {

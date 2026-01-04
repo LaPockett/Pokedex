@@ -26,14 +26,18 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             var isDarkTheme by rememberSaveable { mutableStateOf(false) }
+            var isShiny by rememberSaveable { mutableStateOf(false) }
             PokedexTheme(
                 darkTheme = isDarkTheme
             ) {
                 PokedexNavigation(
                     isDarkTheme= isDarkTheme,
+                    isShiny = isShiny,
                     onToggleTheme = {
                     isDarkTheme = !isDarkTheme
-                })
+                },
+                    onToggleShiny = { isShiny = !isShiny }
+                )
             }
         }
     }

@@ -40,7 +40,9 @@ import com.lapockett.pokedex.model.LocalPadding
 @Composable
 fun TopAppBarPokedex(
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    onToggleShiny: () -> Unit,
+    isShiny: Boolean
 ) {
     //stringResource(id = R.string.app_name)
     val paddingValues = LocalPadding.current
@@ -65,17 +67,14 @@ fun TopAppBarPokedex(
         },
         modifier = Modifier.fillMaxWidth(),
         actions = {
-            IconButton(
-                onClick = {
-                    isShiny = !isShiny
-                }
-            ) {
+            IconButton(onClick = onToggleShiny) {
                 Icon(
-                    painter = if (isShiny) painterResource(id = R.drawable.sparkles_filled) else painterResource(
-                        id = R.drawable.sparkles
-                    ),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = "Shiny"
+                    painter = if (isShiny)
+                        painterResource(R.drawable.sparkles_filled)
+                    else
+                        painterResource(R.drawable.sparkles),
+                    contentDescription = "Shiny",
+                    modifier = Modifier.size(24.dp)
                 )
             }
             IconButton(onClick = onToggleTheme) {
@@ -104,16 +103,17 @@ fun TopAppBarPokedex(
     )
 }
 
-//@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PokedexNavigation(
     isDarkTheme: Boolean,
+    isShiny: Boolean,
+    onToggleShiny: () -> Unit,
     onToggleTheme: () -> Unit
 ) {
     val navController = rememberNavController()
 
     Scaffold(
-        topBar = { TopAppBarPokedex(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme) },
+        topBar = { TopAppBarPokedex(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme, onToggleShiny = onToggleShiny, isShiny = isShiny) },
         contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {},
         floatingActionButtonPosition = FabPosition.End,
@@ -126,7 +126,7 @@ fun PokedexNavigation(
                 .padding(padding)
         ) {
             composable(Screen.Main.route) {
-                ListPokemonScreen(navController = navController)
+                ListPokemonScreen(navController = navController, isShiny = isShiny)
             }
 
             composable(
@@ -139,9 +139,8 @@ fun PokedexNavigation(
             ) { backStackEntry ->
                 val pokemonId =
                     backStackEntry.arguments?.getInt("pokemonId") ?: return@composable
-                PokemonDetailsScreen(pokemonId = pokemonId)
+                PokemonDetailsScreen(pokemonId = pokemonId, isShiny = isShiny)
             }
         }
     }
-
 }

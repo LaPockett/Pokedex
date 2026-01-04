@@ -74,14 +74,18 @@ data class AbilityUI(
 )
 
 @Composable
-fun PokemonDetailsScreen(pokemonId: Int){
+fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
     val repository = remember { PokemonRepositoryImpl(api) }
     val viewModel = remember { PokemonVM(repository) }
-
     val pokemonDetail by viewModel.pokemonDetails.collectAsState()
     val colorValues = LocalColors.current
     val paddingValues = LocalPadding.current
+    val imageUrl = if (isShiny) {
+        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemonDetail.id}.png"
+    } else {
+        pokemonDetail.imageUrl
+    }
 
     LaunchedEffect(pokemonId) {
         viewModel.loadPokemonDetails(pokemonId)
@@ -103,7 +107,7 @@ fun PokemonDetailsScreen(pokemonId: Int){
                 color = colorValues.pokemonIdColor
             )
             AsyncImage(
-                model = pokemonDetail.imageUrl,
+                model = imageUrl,
                 contentDescription = "Example",
                 modifier = Modifier.size(200.dp),
                 onError = {
@@ -166,7 +170,6 @@ fun PokemonDetailsScreen(pokemonId: Int){
             PokemonAbilitiesSection(
                 abilities = pokemonDetail.abilities
             )
-
         }
     }
 }
@@ -190,7 +193,7 @@ fun PokemonStatCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(paddingValues.small),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -200,7 +203,7 @@ fun PokemonStatCard(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(paddingValues.tiny))
             Text(
                 text = value,
                 fontSize = 16.sp,
