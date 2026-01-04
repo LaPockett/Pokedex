@@ -1,6 +1,5 @@
 package com.lapockett.pokedex.ui.screens
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -44,14 +42,10 @@ import com.lapockett.pokedex.data.RetrofitServiceFactory
 import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.PokemonListDetailsUI
-import com.lapockett.pokedex.models.Type
-import com.lapockett.pokedex.models.TypeX
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
-import com.lapockett.pokedex.ui.theme.PokedexTheme
 import com.lapockett.pokedex.utils.formatPokemonId
 import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
-
 
 @Composable
 fun ListPokemonScreen(navController: NavController) {
@@ -75,44 +69,41 @@ fun ListPokemonScreen(navController: NavController) {
                 }
             }
     }
-
-    PokedexTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.onSurfaceVariant)
-                .padding(horizontal = paddingValues.tiny)
-        ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = scrollState,
-                modifier = Modifier.clickable(
-                    onClick = {
-                        navController.navigate(Screen.Detail.route)
-                    }
-                )
-            ) {
-                items(items = pokemonList) { pokemon ->
-                    PokemonItem(pokemon,
-                        onClick = {
-                            navController.navigate(Screen.Detail.createRoute(pokemon.id))
-                        })
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = paddingValues.tiny)
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            state = scrollState,
+            modifier = Modifier.clickable(
+                onClick = {
+                    navController.navigate(Screen.Detail.route)
                 }
+            )
+        ) {
+            items(items = pokemonList) { pokemon ->
+                PokemonItem(
+                    pokemon,
+                    onClick = {
+                        navController.navigate(Screen.Detail.createRoute(pokemon.id))
+                    })
             }
         }
-
     }
+
 }
 
 @Composable
 fun PokemonItem(
     pokemon: PokemonListDetailsUI,
-    onClick: () -> Unit) {
+    onClick: () -> Unit
+) {
     val paddingValues = LocalPadding.current
     val colorValues = LocalColors.current
     var isFavorite by remember { mutableStateOf(false) }
-
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -170,6 +161,7 @@ fun PokemonItem(
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
                     fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onTertiary
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),

@@ -21,7 +21,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lapockett.pokedex.R
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -37,15 +36,17 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.lapockett.pokedex.model.LocalPadding
 
-import com.lapockett.pokedex.ui.theme.PokedexTheme
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBarPokedex() {
+fun TopAppBarPokedex(
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
+) {
     //stringResource(id = R.string.app_name)
     val paddingValues = LocalPadding.current
     var isShiny by remember { mutableStateOf(false) }
-    var isLightTheme by remember { mutableStateOf(true) }
+    var isClicked by remember { mutableStateOf(false) }
+
     TopAppBar(
         navigationIcon = {
             Image(
@@ -70,20 +71,21 @@ fun TopAppBarPokedex() {
                 }
             ) {
                 Icon(
-                    painter = if (isShiny) painterResource(id = R.drawable.sparkles_filled) else painterResource(id = R.drawable.sparkles),
+                    painter = if (isShiny) painterResource(id = R.drawable.sparkles_filled) else painterResource(
+                        id = R.drawable.sparkles
+                    ),
                     modifier = Modifier.size(24.dp),
                     contentDescription = "Shiny"
                 )
             }
-            IconButton(
-                onClick = {
-                    isLightTheme = !isLightTheme
-                }
-            ) {
+            IconButton(onClick = onToggleTheme) {
                 Icon(
-                    painter = if (!isLightTheme) painterResource(id = R.drawable.sun) else painterResource(id = R.drawable.moon),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = "Theme"
+                    painter = if (isDarkTheme)
+                        painterResource(R.drawable.sun)
+                    else
+                        painterResource(R.drawable.moon),
+                    contentDescription = "Theme",
+                    modifier = Modifier.size(24.dp)
                 )
             }
             Box(contentAlignment = Alignment.Center) {
@@ -104,40 +106,42 @@ fun TopAppBarPokedex() {
 
 //@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun PokedexNavigation() {
+fun PokedexNavigation(
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
+) {
     val navController = rememberNavController()
 
-    PokedexTheme {
-        Scaffold(
-            topBar = { TopAppBarPokedex() },
-            contentWindowInsets = WindowInsets.safeDrawing,
-            floatingActionButton = {},
-            floatingActionButtonPosition = FabPosition.End,
-        ) { padding ->
-            NavHost(
-                navController = navController,
-                startDestination = Screen.Main.route,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(padding)
-            ) {
-                composable(Screen.Main.route) {
-                    ListPokemonScreen(navController = navController)
-                }
+    Scaffold(
+        topBar = { TopAppBarPokedex(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme) },
+        contentWindowInsets = WindowInsets.safeDrawing,
+        floatingActionButton = {},
+        floatingActionButtonPosition = FabPosition.End,
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Main.route,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(padding)
+        ) {
+            composable(Screen.Main.route) {
+                ListPokemonScreen(navController = navController)
+            }
 
-                composable(
-                    route = Screen.Detail.route,
-                    arguments = listOf(
-                        navArgument("pokemonId") {
-                            type = NavType.IntType
-                        }
-                    )
-                ) { backStackEntry ->
-                    val pokemonId =
-                        backStackEntry.arguments?.getInt("pokemonId") ?: return@composable
-                    PokemonDetailsScreen(pokemonId = pokemonId)
-                }
+            composable(
+                route = Screen.Detail.route,
+                arguments = listOf(
+                    navArgument("pokemonId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+                val pokemonId =
+                    backStackEntry.arguments?.getInt("pokemonId") ?: return@composable
+                PokemonDetailsScreen(pokemonId = pokemonId)
             }
         }
     }
+
 }
