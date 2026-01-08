@@ -188,6 +188,9 @@ fun PokemonStatCard(
             .height(100.dp)
             .width(100.dp),
         shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -207,7 +210,8 @@ fun PokemonStatCard(
             Text(
                 text = value,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = label,

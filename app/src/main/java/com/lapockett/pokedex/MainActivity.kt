@@ -10,7 +10,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import com.lapockett.pokedex.data.RetrofitServiceFactory
-import com.lapockett.pokedex.ui.screens.ListPokemonScreen
 import com.lapockett.pokedex.ui.screens.PokedexNavigation
 import com.lapockett.pokedex.ui.theme.PokedexTheme
 import kotlinx.coroutines.launch

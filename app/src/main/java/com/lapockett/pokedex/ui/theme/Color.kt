@@ -11,7 +11,7 @@ val PokemonRedLight = Color(0xFFFF5252)
 // Secondary - Azul Pokémon
 val PokemonBlue = Color(0xFF4A5FC1)
 val PokemonBlueDark = Color(0xFF3B4CCA)
-val PokemonBlueLight = Color(0xFF6890F0)
+val PokemonBlueLight = Color(0xff80a1f1)
 
 // Tertiary - Amarillo/Dorado Pokémon
 val PokemonYellow = Color(0xFFFFD700)
