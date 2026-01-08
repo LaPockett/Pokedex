@@ -64,7 +64,7 @@ fun ListPokemonScreen(navController: NavController, isShiny: Boolean) {
             .collect { layoutInfo ->
                 val totalItems = layoutInfo.totalItemsCount
                 val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                if (lastVisibleIndex >= totalItems - 4) {
+                if (lastVisibleIndex >= totalItems - 15) {
                     viewModel.loadPokemon()
                 }
             }
