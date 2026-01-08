@@ -53,7 +53,7 @@ data class PokemonDetailsUI(
     val id: Int,
     val height: Int,
     val weight: Int,
-    val baseExperience: Int,
+    val base_experience: Int,
     val name: String,
     val imageUrl: String,
     val types: List<Type>,
@@ -155,7 +155,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
 
                 PokemonStatCard(
                     icon = painterResource(R.drawable.ray),
-                    value = pokemonDetail.baseExperience.toString(),
+                    value = pokemonDetail.base_experience.toString(),
                     label = "Base XP"
                 )
             }
