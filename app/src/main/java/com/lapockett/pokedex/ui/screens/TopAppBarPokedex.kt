@@ -1,5 +1,6 @@
 package com.lapockett.pokedex.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
@@ -22,12 +24,16 @@ import androidx.navigation.compose.rememberNavController
 import com.lapockett.pokedex.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
@@ -35,6 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.lapockett.pokedex.model.LocalPadding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +113,7 @@ fun TopAppBarPokedex(
     )
 }
 
+@SuppressLint("FrequentlyChangingValue")
 @Composable
 fun PokedexNavigation(
     isDarkTheme: Boolean,
@@ -111,11 +122,30 @@ fun PokedexNavigation(
     onToggleTheme: () -> Unit
 ) {
     val navController = rememberNavController()
+    val scrollState = rememberLazyGridState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = { TopAppBarPokedex(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme, onToggleShiny = onToggleShiny, isShiny = isShiny) },
         contentWindowInsets = WindowInsets.safeDrawing,
-        floatingActionButton = {},
+        floatingActionButton = {
+            if (scrollState.firstVisibleItemIndex > 0) {
+                FloatingActionButton(
+                    onClick = {
+                       coroutineScope.launch {
+                           scrollState.animateScrollToItem(0)
+                       }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        Icons.Filled.KeyboardArrowUp,
+                        contentDescription = "Scroll to top"
+                    )
+                }
+            }
+        },
         floatingActionButtonPosition = FabPosition.End,
     ) { padding ->
         NavHost(
@@ -126,7 +156,11 @@ fun PokedexNavigation(
                 .padding(padding)
         ) {
             composable(Screen.Main.route) {
-                ListPokemonScreen(navController = navController, isShiny = isShiny)
+                ListPokemonScreen(
+                    navController = navController,
+                    isShiny = isShiny,
+                    scrollState = scrollState
+                )
             }
 
             composable(

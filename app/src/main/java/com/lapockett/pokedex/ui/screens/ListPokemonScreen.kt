@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -48,7 +49,11 @@ import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
 
 @Composable
-fun ListPokemonScreen(navController: NavController, isShiny: Boolean) {
+fun ListPokemonScreen(
+    navController: NavController,
+    isShiny: Boolean,
+    scrollState: LazyGridState)
+{
     val paddingValues = LocalPadding.current
 
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
@@ -56,8 +61,6 @@ fun ListPokemonScreen(navController: NavController, isShiny: Boolean) {
     val viewModel = remember { PokemonVM(repository) }
 
     val pokemonList by viewModel.pokemonList.collectAsState()
-    // Variable para detectar el scroll
-    val scrollState = rememberLazyGridState()
 
     LaunchedEffect(scrollState) {
         snapshotFlow { scrollState.layoutInfo }
@@ -77,12 +80,7 @@ fun ListPokemonScreen(navController: NavController, isShiny: Boolean) {
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            state = scrollState,
-            modifier = Modifier.clickable(
-                onClick = {
-                    navController.navigate(Screen.Detail.route)
-                }
-            )
+            state = scrollState
         ) {
             items(items = pokemonList) { pokemon ->
                 PokemonItem(
