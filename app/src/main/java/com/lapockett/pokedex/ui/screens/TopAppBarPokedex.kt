@@ -30,17 +30,18 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.lapockett.pokedex.model.LocalPadding
+import com.lapockett.pokedex.viewModel.FavoritePokemonViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,13 +50,15 @@ fun TopAppBarPokedex(
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
     onToggleShiny: () -> Unit,
-    isShiny: Boolean
+    isShiny: Boolean,
+    viewModelFav: FavoritePokemonViewModel
 ) {
-    //stringResource(id = R.string.app_name)
     val paddingValues = LocalPadding.current
-    var isShiny by remember { mutableStateOf(false) }
-    var isClicked by remember { mutableStateOf(false) }
-
+    val favorites by viewModelFav.favoritePokemon.collectAsState()
+    val badgeCount = when {
+        favorites.size < 10 -> favorites.size.toString()
+        else -> "10+"
+    }
     TopAppBar(
         navigationIcon = {
             Image(
@@ -95,7 +98,13 @@ fun TopAppBarPokedex(
                 )
             }
             Box(contentAlignment = Alignment.Center) {
-                BadgedBox(badge = { Badge { Text("8") } }) {
+                BadgedBox(badge = {
+                    if (badgeCount.isNotEmpty()){
+                        Badge {
+                            Text(badgeCount)
+                        }
+                    }
+                }) {
                     IconButton(
                         onClick = { /*TODO*/ }
                     ) {
@@ -118,12 +127,18 @@ fun PokedexNavigation(
     onToggleShiny: () -> Unit,
     onToggleTheme: () -> Unit
 ) {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val scrollState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
-
+    val viewModelFav = remember { FavoritePokemonViewModel(context) }
     Scaffold(
-        topBar = { TopAppBarPokedex(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme, onToggleShiny = onToggleShiny, isShiny = isShiny) },
+        topBar = { TopAppBarPokedex(
+            isDarkTheme = isDarkTheme,
+            onToggleTheme = onToggleTheme,
+            onToggleShiny = onToggleShiny,
+            isShiny = isShiny,
+            viewModelFav = viewModelFav) },
         contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {
             if (scrollState.firstVisibleItemIndex > 0) {
@@ -156,7 +171,8 @@ fun PokedexNavigation(
                 ListPokemonScreen(
                     navController = navController,
                     isShiny = isShiny,
-                    scrollState = scrollState
+                    scrollState = scrollState,
+                    viewModelFav = viewModelFav
                 )
             }
 

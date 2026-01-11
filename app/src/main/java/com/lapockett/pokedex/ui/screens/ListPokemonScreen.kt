@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -40,23 +39,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import com.lapockett.pokedex.data.RetrofitServiceFactory
+import com.lapockett.pokedex.databases.data.RetrofitServiceFactory
+import com.lapockett.pokedex.entitie.PokemonEntity
 import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.PokemonListDetailsUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
 import com.lapockett.pokedex.utils.formatPokemonId
 import com.lapockett.pokedex.utils.pokemonTypeToColor
+import com.lapockett.pokedex.viewModel.FavoritePokemonViewModel
 import com.lapockett.pokedex.viewModel.PokemonVM
 
 @Composable
 fun ListPokemonScreen(
     navController: NavController,
     isShiny: Boolean,
-    scrollState: LazyGridState)
+    scrollState: LazyGridState,
+    viewModelFav : FavoritePokemonViewModel
+)
 {
     val paddingValues = LocalPadding.current
-
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
     val repository = remember { PokemonRepositoryImpl(api) }
     val viewModel = remember { PokemonVM(repository) }
@@ -89,7 +91,9 @@ fun ListPokemonScreen(
                     isShiny = isShiny,
                     onClick = {
                         navController.navigate(Screen.Detail.createRoute(pokemon.id))
-                    })
+                    },
+                    viewModelFav = viewModelFav
+                )
             }
         }
     }
@@ -100,7 +104,8 @@ fun ListPokemonScreen(
 fun PokemonItem(
     pokemon: PokemonListDetailsUI,
     isShiny: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    viewModelFav: FavoritePokemonViewModel
 ) {
     val paddingValues = LocalPadding.current
     val colorValues = LocalColors.current
@@ -109,6 +114,9 @@ fun PokemonItem(
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemon.id}.png"
     } else {
         pokemon.imageUrl
+    }
+    LaunchedEffect(pokemon.id, viewModelFav) {
+        isFavorite = viewModelFav.isPokemonFavorite(pokemon.id)
     }
     Card(
         modifier = Modifier
@@ -149,8 +157,17 @@ fun PokemonItem(
                     IconButton(
                         onClick = {
                             isFavorite = !isFavorite
-                        },
-                        modifier = Modifier.size(24.dp)
+                            val pokemonEntity = PokemonEntity(
+                                id = pokemon.id,
+                                name = pokemon.name,
+                                imageUrl = pokemon.imageUrl
+                            )
+                            if (isFavorite) {
+                                viewModelFav.addFavoritePokemon(pokemonEntity)
+                            } else {
+                                viewModelFav.removeFavoritePokemon(pokemonEntity)
+                            }
+                        }
                     ) {
                         Icon(
                             imageVector =

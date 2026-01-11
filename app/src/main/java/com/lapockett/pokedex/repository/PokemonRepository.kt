@@ -1,6 +1,6 @@
 package com.lapockett.pokedex.repository
 
-import com.lapockett.pokedex.data.PokeApiService
+import com.lapockett.pokedex.databases.data.PokeApiService
 import com.lapockett.pokedex.model.PokemonResponse
 import com.lapockett.pokedex.models.PokemonListDetailsUI
 import com.lapockett.pokedex.ui.screens.PokemonDetailsUI

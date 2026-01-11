@@ -1,4 +1,4 @@
-package com.lapockett.pokedex.data
+package com.lapockett.pokedex.databases.data
 
 import com.lapockett.pokedex.model.PokemonResponse
 import com.lapockett.pokedex.models.PokemonListDetailsUI
