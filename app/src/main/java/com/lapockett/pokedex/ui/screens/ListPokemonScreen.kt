@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +42,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.lapockett.pokedex.data.RetrofitServiceFactory
 import com.lapockett.pokedex.model.LocalColors
+import com.lapockett.pokedex.model.LocalFontSizes
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.PokemonListDetailsUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
@@ -102,6 +104,7 @@ fun PokemonItem(
     onClick: () -> Unit
 ) {
     val paddingValues = LocalPadding.current
+    val fontValues = LocalFontSizes.current
     val colorValues = LocalColors.current
     var isFavorite by remember { mutableStateOf(false) }
     val imageUrl = if (isShiny) {
@@ -115,11 +118,17 @@ fun PokemonItem(
             .padding(paddingValues.extraTiny)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.onPrimary)
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .padding(paddingValues.tiny)
         ) {
             Column(
@@ -135,7 +144,7 @@ fun PokemonItem(
                 ) {
                     Text(
                         text = formatPokemonId(pokemon.id),
-                        fontSize = 14.sp,
+                        fontSize = fontValues.normal,
                         color = colorValues.pokemonIdColor
                     )
                     IconButton(
@@ -165,8 +174,8 @@ fun PokemonItem(
 
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onTertiary
+                    fontSize = fontValues.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -180,15 +189,14 @@ fun PokemonItem(
                             label = {
                                 Text(
                                     text = type.type.name.replaceFirstChar { it.uppercase() },
-                                    fontSize = 13.sp
+                                    fontSize = fontValues.small,
                                 )
                             },
                             modifier = Modifier.wrapContentWidth(),
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = backgroundColor,
-                                labelColor = MaterialTheme.colorScheme.onPrimary,
-
-                                )
+                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         )
                     }
                 }

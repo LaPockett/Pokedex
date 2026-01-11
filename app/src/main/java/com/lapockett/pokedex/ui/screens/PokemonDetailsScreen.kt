@@ -38,6 +38,7 @@ import coil3.compose.AsyncImage
 import com.lapockett.pokedex.R
 import com.lapockett.pokedex.data.RetrofitServiceFactory
 import com.lapockett.pokedex.model.LocalColors
+import com.lapockett.pokedex.model.LocalFontSizes
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.AbilityX
 import com.lapockett.pokedex.models.StatX
@@ -81,6 +82,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
     val pokemonDetail by viewModel.pokemonDetails.collectAsState()
     val colorValues = LocalColors.current
     val paddingValues = LocalPadding.current
+    val fontValues = LocalFontSizes.current
     val imageUrl = if (isShiny) {
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemonDetail.id}.png"
     } else {
@@ -103,7 +105,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
             Spacer(modifier = Modifier.height(paddingValues.tiny))
             Text(
                 text = formatPokemonId(pokemonId),
-                fontSize = 14.sp,
+                fontSize = fontValues.normal,
                 color = colorValues.pokemonIdColor
             )
             AsyncImage(
@@ -116,7 +118,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
             )
             Text(
                 text = pokemonDetail.name.replaceFirstChar { it.uppercase() },
-                fontSize = 20.sp,
+                fontSize = fontValues.titleLarge,
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -131,7 +133,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
                         modifier = Modifier.wrapContentWidth(),
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = backgroundColor,
-                            labelColor = MaterialTheme.colorScheme.onPrimary)
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer)
                     )
                 }
             }
@@ -182,6 +184,7 @@ fun PokemonStatCard(
     modifier: Modifier = Modifier
 ) {
     val paddingValues = LocalPadding.current
+    val fontValues = LocalFontSizes.current
 
     Card(
         modifier = modifier
@@ -209,13 +212,13 @@ fun PokemonStatCard(
             Spacer(Modifier.height(paddingValues.tiny))
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = fontValues.title,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = label,
-                fontSize = 13.sp,
+                fontSize = fontValues.normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

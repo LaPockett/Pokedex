@@ -3,7 +3,11 @@ package com.lapockett.pokedex.model
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.size.Size
 
 /**
  * Global padding
@@ -45,3 +49,17 @@ data class Colors(
     val pokemonIdColor : Color = Color(0xda5e5d5d)
 )
 val LocalColors = compositionLocalOf { Colors() }
+/**
+ * Global sizes of text
+ */
+data class FontSizes(
+    val extraTiny: TextUnit = 8.sp,
+    val tiny: TextUnit = 10.sp,
+    val small: TextUnit = 12.sp,
+    val normal: TextUnit = 14.sp,
+    val title: TextUnit = 16.sp,
+    val titleMedium: TextUnit = 18.sp,
+    val titleLarge:TextUnit = 24.sp
+)
+
+val LocalFontSizes = compositionLocalOf { FontSizes() }
