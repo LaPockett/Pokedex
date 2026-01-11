@@ -42,7 +42,6 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.lapockett.pokedex.data.RetrofitServiceFactory
 import com.lapockett.pokedex.model.LocalColors
-import com.lapockett.pokedex.model.LocalFontSizes
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.models.PokemonListDetailsUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
@@ -104,7 +103,6 @@ fun PokemonItem(
     onClick: () -> Unit
 ) {
     val paddingValues = LocalPadding.current
-    val fontValues = LocalFontSizes.current
     val colorValues = LocalColors.current
     var isFavorite by remember { mutableStateOf(false) }
     val imageUrl = if (isShiny) {
@@ -144,7 +142,8 @@ fun PokemonItem(
                 ) {
                     Text(
                         text = formatPokemonId(pokemon.id),
-                        fontSize = fontValues.normal,
+                        fontSize = MaterialTheme.typography.labelLarge.fontSize,
+                        fontFamily = MaterialTheme.typography.labelLarge.fontFamily,
                         color = colorValues.pokemonIdColor
                     )
                     IconButton(
@@ -174,8 +173,9 @@ fun PokemonItem(
 
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
-                    fontSize = fontValues.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontFamily = MaterialTheme.typography.titleMedium.fontFamily,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -189,7 +189,8 @@ fun PokemonItem(
                             label = {
                                 Text(
                                     text = type.type.name.replaceFirstChar { it.uppercase() },
-                                    fontSize = fontValues.small,
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                    fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
                                 )
                             },
                             modifier = Modifier.wrapContentWidth(),

@@ -82,7 +82,6 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
     val pokemonDetail by viewModel.pokemonDetails.collectAsState()
     val colorValues = LocalColors.current
     val paddingValues = LocalPadding.current
-    val fontValues = LocalFontSizes.current
     val imageUrl = if (isShiny) {
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemonDetail.id}.png"
     } else {
@@ -105,7 +104,8 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
             Spacer(modifier = Modifier.height(paddingValues.tiny))
             Text(
                 text = formatPokemonId(pokemonId),
-                fontSize = fontValues.normal,
+                fontSize = MaterialTheme.typography.labelLarge.fontSize,
+                fontFamily = MaterialTheme.typography.labelLarge.fontFamily,
                 color = colorValues.pokemonIdColor
             )
             AsyncImage(
@@ -118,7 +118,10 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
             )
             Text(
                 text = pokemonDetail.name.replaceFirstChar { it.uppercase() },
-                fontSize = fontValues.titleLarge,
+                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                fontWeight = MaterialTheme.typography.titleLarge.fontWeight,
+                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -129,7 +132,11 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
                     val backgroundColor = pokemonTypeToColor(type.type.name)
                     AssistChip(
                         onClick = {},
-                        label = { Text(text = type.type.name.replaceFirstChar { it.uppercase() }, fontSize = 13.sp) },
+                        label = { Text(
+                            text = type.type.name.replaceFirstChar { it.uppercase() },
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
+                        ) },
                         modifier = Modifier.wrapContentWidth(),
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = backgroundColor,
@@ -184,8 +191,6 @@ fun PokemonStatCard(
     modifier: Modifier = Modifier
 ) {
     val paddingValues = LocalPadding.current
-    val fontValues = LocalFontSizes.current
-
     Card(
         modifier = modifier
             .height(100.dp)
@@ -212,13 +217,16 @@ fun PokemonStatCard(
             Spacer(Modifier.height(paddingValues.tiny))
             Text(
                 text = value,
-                fontSize = fontValues.title,
-                fontWeight = FontWeight.Bold,
+                fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                fontWeight = MaterialTheme.typography.titleMedium.fontWeight,
+                fontFamily = MaterialTheme.typography.titleMedium.fontFamily,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = label,
-                fontSize = fontValues.normal,
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
