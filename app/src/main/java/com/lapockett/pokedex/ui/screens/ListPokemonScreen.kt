@@ -196,7 +196,7 @@ fun PokemonItem(
                             modifier = Modifier.wrapContentWidth(),
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = backgroundColor,
-                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                labelColor = MaterialTheme.colorScheme.onSurface
                             )
                         )
                     }

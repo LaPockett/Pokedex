@@ -1,5 +1,6 @@
 package com.lapockett.pokedex.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
@@ -29,6 +31,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -75,7 +80,7 @@ data class AbilityUI(
 )
 
 @Composable
-fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
+fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
     val repository = remember { PokemonRepositoryImpl(api) }
     val viewModel = remember { PokemonVM(repository) }
@@ -87,15 +92,17 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
     } else {
         pokemonDetail.imageUrl
     }
-
+    val mainTypeColor = pokemonTypeToColor(
+        pokemonDetail.types.firstOrNull()?.type?.name ?: "normal"
+    )
     LaunchedEffect(pokemonId) {
         viewModel.loadPokemonDetails(pokemonId)
     }
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
-        Column (
+    ) {
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
@@ -108,23 +115,46 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
                 fontFamily = MaterialTheme.typography.labelLarge.fontFamily,
                 color = colorValues.pokemonIdColor
             )
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Example",
-                modifier = Modifier.size(200.dp),
-                onError = {
-                    println("Error loading image: ${it.result.throwable.message}")
+            Box(
+                modifier = Modifier
+                    .fillMaxSize().height(250.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                mainTypeColor.copy(alpha = 0.5f),
+                                mainTypeColor.copy(alpha = 0.4f),
+                                mainTypeColor.copy(alpha = 0.3f),
+                                mainTypeColor.copy(alpha = 0.2f),
+                                mainTypeColor.copy(alpha = 0.1f),
+                                Color.Transparent
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Pokémon ${pokemonDetail.name}",
+                        modifier = Modifier.size(216.dp),
+                        onError = {
+                            println("Error loading image: ${it.result.throwable.message}")
+                        }
+                    )
+                    Text(
+                        text = pokemonDetail.name.replaceFirstChar { it.uppercase() },
+                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        fontWeight = MaterialTheme.typography.titleLarge.fontWeight,
+                        fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
-            )
-            Text(
-                text = pokemonDetail.name.replaceFirstChar { it.uppercase() },
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                fontWeight = MaterialTheme.typography.titleLarge.fontWeight,
-                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            }
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = paddingValues.extraTiny),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -132,15 +162,18 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean){
                     val backgroundColor = pokemonTypeToColor(type.type.name)
                     AssistChip(
                         onClick = {},
-                        label = { Text(
-                            text = type.type.name.replaceFirstChar { it.uppercase() },
-                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                            fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
-                        ) },
+                        label = {
+                            Text(
+                                text = type.type.name.replaceFirstChar { it.uppercase() },
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
+                            )
+                        },
                         modifier = Modifier.wrapContentWidth(),
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = backgroundColor,
-                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                 }
             }
