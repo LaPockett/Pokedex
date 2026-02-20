@@ -1,24 +1,30 @@
 package com.lapockett.pokedex.repository
 
 import com.lapockett.pokedex.databases.data.PokeApiService
-import com.lapockett.pokedex.model.PokemonResponse
-import com.lapockett.pokedex.models.PokemonListDetailsUI
-import com.lapockett.pokedex.ui.screens.PokemonDetailsUI
+import com.lapockett.pokedex.mappers.toDetailsUI
+import com.lapockett.pokedex.mappers.toListItemUI
+import com.lapockett.pokedex.model.ui.PokemonDetailsUI
+import com.lapockett.pokedex.model.ui.PokemonListItemUI
 
 interface PokemonRepository {
-    suspend fun getPokemonList(offset: Int, limit: Int): PokemonResponse
-    suspend fun getPokemonByName(name: String): PokemonListDetailsUI
+    suspend fun getRawPokemonPage(offset: Int, limit: Int): List<String>
+    suspend fun getPokemonByName(name: String): PokemonListItemUI
     suspend fun getPokemonById(id: Int): PokemonDetailsUI
 }
 
-class PokemonRepositoryImpl(private val apiService: PokeApiService) : PokemonRepository{
-    override suspend fun getPokemonList(offset: Int, limit: Int): PokemonResponse {
-        return apiService.getPokemon(offset, limit)
+class PokemonRepositoryImpl(
+    private val apiService: PokeApiService
+) : PokemonRepository {
+
+    override suspend fun getRawPokemonPage(offset: Int, limit: Int): List<String> {
+        return apiService.getPokemonList(offset, limit).results.map { it.name }
     }
-    override suspend fun getPokemonByName(name: String): PokemonListDetailsUI {
-        return apiService.getPokemonByName(name)
+
+    override suspend fun getPokemonByName(name: String): PokemonListItemUI {
+        return apiService.getPokemonByName(name).toListItemUI()
     }
+
     override suspend fun getPokemonById(id: Int): PokemonDetailsUI {
-        return apiService.getPokemonById(id)
+        return apiService.getPokemonById(id).toDetailsUI()
     }
 }

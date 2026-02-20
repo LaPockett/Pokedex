@@ -18,8 +18,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,9 +42,7 @@ import com.lapockett.pokedex.R
 import com.lapockett.pokedex.databases.data.RetrofitServiceFactory
 import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
-import com.lapockett.pokedex.models.AbilityX
-import com.lapockett.pokedex.models.StatX
-import com.lapockett.pokedex.models.Type
+import com.lapockett.pokedex.model.PokemonDetailState
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
 import com.lapockett.pokedex.utils.formatHeight
 import com.lapockett.pokedex.utils.formatPokemonId
@@ -50,163 +50,160 @@ import com.lapockett.pokedex.utils.formatWeight
 import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.PokemonVM
 
-data class PokemonDetailsUI(
-    val id: Int,
-    val height: Int,
-    val weight: Int,
-    val base_experience: Int,
-    val name: String,
-    val imageUrl: String,
-    val types: List<Type>,
-    val stats: List<StatUI>,
-    val abilities: List<AbilityUI>
-)
-
-data class StatUI(
-    val base_stat: Int,
-    val effort: Int,
-    val stat: StatX
-)
-
-data class AbilityUI(
-    val ability: AbilityX,
-    val is_hidden: Boolean,
-    val slot: Int
-)
-
 @Composable
 fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
     val api = remember { RetrofitServiceFactory.makeRetrofitService() }
     val repository = remember { PokemonRepositoryImpl(api) }
     val viewModel = remember { PokemonVM(repository) }
-    val pokemonDetail by viewModel.pokemonDetails.collectAsState()
+    val detailState by viewModel.detailState.collectAsState()
     val colorValues = LocalColors.current
     val paddingValues = LocalPadding.current
-    val imageUrl = if (isShiny) {
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemonDetail.id}.png"
-    } else {
-        pokemonDetail.imageUrl
-    }
-    val mainTypeColor = pokemonTypeToColor(
-        pokemonDetail.types.firstOrNull()?.type?.name ?: "normal"
-    )
+
     LaunchedEffect(pokemonId) {
         viewModel.loadPokemonDetails(pokemonId)
     }
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            Spacer(modifier = Modifier.height(paddingValues.tiny))
-            Text(
-                text = formatPokemonId(pokemonId),
-                fontSize = MaterialTheme.typography.labelLarge.fontSize,
-                fontFamily = MaterialTheme.typography.labelLarge.fontFamily,
-                color = colorValues.pokemonIdColor
+
+    when (val state = detailState) {
+        is PokemonDetailState.Loading, is PokemonDetailState.Idle -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        is PokemonDetailState.Error -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                    Button(onClick = { viewModel.retryLoadDetails(pokemonId) }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+        }
+        is PokemonDetailState.Success -> {
+            val pokemon = state.data
+
+            val imageUrl = if (isShiny) {
+                "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemon.id}.png"
+            } else {
+                pokemon.imageUrl
+            }
+            val mainTypeColor = pokemonTypeToColor(
+                pokemon.types.firstOrNull()?.name ?: "normal"
             )
+
             Box(
-                modifier = Modifier
-                    .fillMaxSize().height(250.dp)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                mainTypeColor.copy(alpha = 0.5f),
-                                mainTypeColor.copy(alpha = 0.4f),
-                                mainTypeColor.copy(alpha = 0.3f),
-                                mainTypeColor.copy(alpha = 0.2f),
-                                mainTypeColor.copy(alpha = 0.1f),
-                                Color.Transparent
-                            )
-                        )
-                    ),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Pokémon ${pokemonDetail.name}",
-                        modifier = Modifier.size(216.dp),
-                        onError = {
-                            println("Error loading image: ${it.result.throwable.message}")
-                        }
-                    )
+                    Spacer(modifier = Modifier.height(paddingValues.tiny))
                     Text(
-                        text = pokemonDetail.name.replaceFirstChar { it.uppercase() },
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                        fontWeight = MaterialTheme.typography.titleLarge.fontWeight,
-                        fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = formatPokemonId(pokemonId),
+                        fontSize = MaterialTheme.typography.labelLarge.fontSize,
+                        fontFamily = MaterialTheme.typography.labelLarge.fontFamily,
+                        color = colorValues.pokemonIdColor
                     )
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = paddingValues.extraTiny),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                pokemonDetail.types.take(2).forEach { type ->
-                    val backgroundColor = pokemonTypeToColor(type.type.name)
-                    AssistChip(
-                        onClick = {},
-                        label = {
-                            Text(
-                                text = type.type.name.replaceFirstChar { it.uppercase() },
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .height(250.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        mainTypeColor.copy(alpha = 0.5f),
+                                        mainTypeColor.copy(alpha = 0.4f),
+                                        mainTypeColor.copy(alpha = 0.3f),
+                                        mainTypeColor.copy(alpha = 0.2f),
+                                        mainTypeColor.copy(alpha = 0.1f),
+                                        Color.Transparent
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = "Pokémon ${pokemon.name}",
+                                modifier = Modifier.size(216.dp),
+                                onError = {
+                                    println("Error loading image: ${it.result.throwable.message}")
+                                }
                             )
-                        },
-                        modifier = Modifier.wrapContentWidth(),
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = backgroundColor,
-                            labelColor = MaterialTheme.colorScheme.onSurface
+                            Text(
+                                text = pokemon.name.replaceFirstChar { it.uppercase() },
+                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                                fontWeight = MaterialTheme.typography.titleLarge.fontWeight,
+                                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = paddingValues.extraTiny),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        pokemon.types.take(2).forEach { type ->
+                            val backgroundColor = pokemonTypeToColor(type.name)
+                            AssistChip(
+                                onClick = {},
+                                label = {
+                                    Text(
+                                        text = type.name.replaceFirstChar { it.uppercase() },
+                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                        fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
+                                    )
+                                },
+                                modifier = Modifier.wrapContentWidth(),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = backgroundColor,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        PokemonStatCard(
+                            icon = painterResource(R.drawable.rule),
+                            value = "${formatHeight(pokemon.height)} m",
+                            label = "Height"
                         )
+                        Spacer(Modifier.width(paddingValues.big))
+                        PokemonStatCard(
+                            icon = painterResource(R.drawable.weight),
+                            value = "${formatWeight(pokemon.weight)} kg",
+                            label = "Weight"
+                        )
+                        Spacer(Modifier.width(paddingValues.big))
+                        PokemonStatCard(
+                            icon = painterResource(R.drawable.ray),
+                            value = pokemon.baseExperience.toString(),  // antes base_experience
+                            label = "Base XP"
+                        )
+                    }
+                    PokemonStatsSection(
+                        stats = pokemon.stats,
+                        typeColor = mainTypeColor
+                    )
+                    PokemonAbilitiesSection(
+                        abilities = pokemon.abilities
                     )
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                PokemonStatCard(
-                    icon = painterResource(R.drawable.rule),
-                    value = "${formatHeight(pokemonDetail.height)} m",
-                    label = "Height"
-                )
-                Spacer(Modifier.width(paddingValues.big))
-
-                PokemonStatCard(
-                    icon = painterResource(R.drawable.weight),
-                    value = "${formatWeight(pokemonDetail.weight)} kg",
-                    label = "Weight"
-                )
-                Spacer(Modifier.width(paddingValues.big))
-
-                PokemonStatCard(
-                    icon = painterResource(R.drawable.ray),
-                    value = pokemonDetail.base_experience.toString(),
-                    label = "Base XP"
-                )
-            }
-            val mainTypeColor = pokemonTypeToColor(
-                pokemonDetail.types.firstOrNull()?.type?.name ?: "normal"
-            )
-
-            PokemonStatsSection(
-                stats = pokemonDetail.stats,
-                typeColor = mainTypeColor
-            )
-            PokemonAbilitiesSection(
-                abilities = pokemonDetail.abilities
-            )
         }
     }
 }

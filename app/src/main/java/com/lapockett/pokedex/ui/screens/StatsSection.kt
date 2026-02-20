@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lapockett.pokedex.model.LocalPadding
-
+import com.lapockett.pokedex.model.ui.StatUI
 
 @Composable
 fun StatBar(
@@ -95,8 +95,8 @@ fun PokemonStatsSection(stats: List<StatUI>, typeColor: Color) {
 
         stats.forEach { stat ->
             StatBar(
-                statName = stat.stat.name.replace("-", " ").uppercase(),
-                statValue = stat.base_stat,
+                statName = stat.name.replace("-", " ").uppercase(),
+                statValue = stat.baseStat,
                 barColor = typeColor
             )
         }

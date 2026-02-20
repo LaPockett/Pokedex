@@ -18,11 +18,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val service = RetrofitServiceFactory.makeRetrofitService()
-        lifecycleScope.launch {
-            val pokemon = service.getPokemon(0, 20)
-            println(pokemon)
-        }
         setContent {
             var isDarkTheme by rememberSaveable { mutableStateOf(false) }
             var isShiny by rememberSaveable { mutableStateOf(false) }

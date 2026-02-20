@@ -2,121 +2,105 @@ package com.lapockett.pokedex.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lapockett.pokedex.models.PokemonListDetailsUI
-import com.lapockett.pokedex.models.Type
+import com.lapockett.pokedex.model.PokemonDetailState
+import com.lapockett.pokedex.model.PokemonListState
+import com.lapockett.pokedex.model.ui.PokemonListItemUI
 import com.lapockett.pokedex.repository.PokemonRepository
-import com.lapockett.pokedex.ui.screens.AbilityUI
-import com.lapockett.pokedex.ui.screens.PokemonDetailsUI
-import com.lapockett.pokedex.ui.screens.StatUI
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
 
 class PokemonVM(
     private val repository: PokemonRepository
 ) : ViewModel() {
 
-    private val _pokemonList =
-        MutableStateFlow<List<PokemonListDetailsUI>>(emptyList())
-    val pokemonList: StateFlow<List<PokemonListDetailsUI>> = _pokemonList
+    private val _listState = MutableStateFlow<PokemonListState>(PokemonListState.Idle)
+    val listState: StateFlow<PokemonListState> = _listState.asStateFlow()
 
-    private val _pokemonDetails =
-        MutableStateFlow<PokemonDetailsUI>(
-            PokemonDetailsUI(
-                id = 0,
-                height = 0,
-                weight = 0,
-                base_experience = 0,
-                name = "",
-                imageUrl = "",
-                types = emptyList(),
-                stats = emptyList(),
-                abilities = emptyList()
-            )
-        )
-    val pokemonDetails: StateFlow<PokemonDetailsUI> = _pokemonDetails
+    private val _detailState = MutableStateFlow<PokemonDetailState>(PokemonDetailState.Idle)
+    val detailState: StateFlow<PokemonDetailState> = _detailState.asStateFlow()
 
-    private var offset = 0
     private val limit = 20
-    private var isLoading = false
+    private var offset = 0
     private var hasMore = true
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val loadedPokemon = mutableListOf<PokemonListItemUI>()
 
     init {
         loadPokemon()
     }
+
     fun loadPokemon() {
-        if (isLoading || !hasMore) return
-        isLoading = true
+        if (_isLoading.value || !hasMore) return
 
         viewModelScope.launch {
-            val listResponse = repository.getPokemonList(offset, limit)
-            if(listResponse.results.isEmpty()){
-                hasMore = false
-                isLoading = false
-                return@launch
-            }
+            _isLoading.value = true
+            _listState.value = PokemonListState.Loading
 
-            val detailedList = listResponse.results.map { result ->
-                val detail = repository.getPokemonByName(result.name)
+            try {
+                val listResponse = repository.getRawPokemonPage(offset, limit)
 
-                PokemonListDetailsUI(
-                    id = detail.id,
-                    name = detail.name,
-                    imageUrl = getPokemonDefaultImage(detail.id),
-                    types = getPokemonTypes(detail.types)
+                if (listResponse.isEmpty()) {
+                    hasMore = false
+                    _listState.value = PokemonListState.Success(
+                        data = loadedPokemon.toList(),
+                        canLoadMore = false
+                    )
+                    return@launch
+                }
+                val detailedList = listResponse.map { name ->
+                    async { repository.getPokemonByName(name) }
+                }.awaitAll()
+
+                loadedPokemon.addAll(detailedList)
+                offset += limit
+                hasMore = listResponse.size == limit
+
+                _listState.value = PokemonListState.Success(
+                    data = loadedPokemon.toList(),
+                    canLoadMore = hasMore
                 )
+
+            } catch (e: Exception) {
+                _listState.value = PokemonListState.Error(
+                    e.message ?: "ERROR cargando la lista de pokémon"
+                )
+            } finally {
+                _isLoading.value = false
             }
-            _pokemonList.value += detailedList
-            offset += limit
-            isLoading = false
         }
     }
+
     fun loadPokemonDetails(pokemonId: Int) {
         viewModelScope.launch {
-            val detail = repository.getPokemonById(pokemonId)
-            _pokemonDetails.value = PokemonDetailsUI(
-                id = detail.id,
-                height = detail.height,
-                weight = detail.weight,
-                base_experience = detail.base_experience,
-                name = detail.name,
-                imageUrl = getPokemonDefaultImage(detail.id),
-                types = getPokemonTypes(detail.types),
-                stats = getPokemonStats(detail.stats),
-                abilities = getPokemonAbilities(detail.abilities)
-            )
+            _detailState.value = PokemonDetailState.Loading
 
+            try {
+                val detail = repository.getPokemonById(pokemonId)
+                _detailState.value = PokemonDetailState.Success(detail)
+            } catch (e: Exception) {
+                _detailState.value = PokemonDetailState.Error(
+                    e.message ?: "ERROR cargando el detalle del pokémon"
+                )
+            }
         }
     }
-    private fun getPokemonAbilities(abilities: List<AbilityUI>): List<AbilityUI>{
-        return abilities.map {
-            AbilityUI(
-                ability = it.ability,
-                is_hidden = it.is_hidden,
-                slot = it.slot
-            )
-        }
-    }
-    private fun getPokemonStats(stats: List<StatUI>): List<StatUI>{
-        return stats.map {
-            StatUI(
-                base_stat = it.base_stat,
-                effort = it.effort,
-                stat = it.stat
-            )
-        }
-
-    }
-    private fun getPokemonTypes(types: List<Type>): List<Type>{
-        return types.map {
-            Type(
-                slot = it.slot,
-                type = it.type
-            )
+    fun retryLoadPokemon() {
+        if (_listState.value is PokemonListState.Error) {
+            loadPokemon()
         }
     }
 
-    private fun getPokemonDefaultImage(id: Int): String {
-        return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png"
+    fun retryLoadDetails(pokemonId: Int) {
+        if (_detailState.value is PokemonDetailState.Error) {
+            loadPokemonDetails(pokemonId)
+        }
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -20,8 +21,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +46,8 @@ import com.lapockett.pokedex.databases.data.RetrofitServiceFactory
 import com.lapockett.pokedex.entitie.PokemonEntity
 import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
-import com.lapockett.pokedex.models.PokemonListDetailsUI
+import com.lapockett.pokedex.model.PokemonListState
+import com.lapockett.pokedex.model.ui.PokemonListItemUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
 import com.lapockett.pokedex.utils.formatPokemonId
 import com.lapockett.pokedex.utils.pokemonTypeToColor
@@ -63,7 +67,8 @@ fun ListPokemonScreen(
     val repository = remember { PokemonRepositoryImpl(api) }
     val viewModel = remember { PokemonVM(repository) }
 
-    val pokemonList by viewModel.pokemonList.collectAsState()
+    val listState by viewModel.listState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(scrollState) {
         snapshotFlow { scrollState.layoutInfo }
@@ -81,28 +86,58 @@ fun ListPokemonScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = paddingValues.tiny)
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            state = scrollState
-        ) {
-            items(items = pokemonList) { pokemon ->
-                PokemonItem(
-                    pokemon,
-                    isShiny = isShiny,
-                    onClick = {
-                        navController.navigate(Screen.Detail.createRoute(pokemon.id))
-                    },
-                    viewModelFav = viewModelFav
-                )
+        when (val state = listState) {
+            is PokemonListState.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
+
+            is PokemonListState.Success -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = scrollState
+                ) {
+                    items(items = state.data) { pokemon ->
+                        PokemonItem(
+                            pokemon,
+                            isShiny = isShiny,
+                            onClick = { navController.navigate(Screen.Detail.createRoute(pokemon.id)) },
+                            viewModelFav = viewModelFav
+                        )
+                    }
+                    if (isLoading){
+                        item(span = { GridItemSpan(2) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+                }
+            }
+
+            is PokemonListState.Error -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = state.message, color = MaterialTheme.colorScheme.error)
+                    Button(onClick = { viewModel.retryLoadPokemon() }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+            is PokemonListState.Idle -> Unit
         }
     }
-
 }
 
 @Composable
 fun PokemonItem(
-    pokemon: PokemonListDetailsUI,
+    pokemon: PokemonListItemUI,
     isShiny: Boolean,
     onClick: () -> Unit,
     viewModelFav: FavoritePokemonViewModel
@@ -200,12 +235,12 @@ fun PokemonItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     pokemon.types.take(2).forEach { type ->
-                        val backgroundColor = pokemonTypeToColor(type.type.name)
+                        val backgroundColor = pokemonTypeToColor(type.name)
                         AssistChip(
                             onClick = {},
                             label = {
                                 Text(
-                                    text = type.type.name.replaceFirstChar { it.uppercase() },
+                                    text = type.name.replaceFirstChar { it.uppercase() },
                                     fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                     fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
                                 )

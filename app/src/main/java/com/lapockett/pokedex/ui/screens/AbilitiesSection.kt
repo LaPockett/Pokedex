@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lapockett.pokedex.model.LocalPadding
+import com.lapockett.pokedex.model.ui.AbilityUI
 
 @Composable
 fun AbilityChip(name: String, isHidden: Boolean) {
@@ -61,8 +62,8 @@ fun PokemonAbilitiesSection(abilities: List<AbilityUI>) {
         ) {
             abilities.forEach { ability ->
                 AbilityChip(
-                    name = ability.ability.name,
-                    isHidden = ability.is_hidden
+                    name = ability.name,
+                    isHidden = ability.isHidden
                 )
             }
         }
