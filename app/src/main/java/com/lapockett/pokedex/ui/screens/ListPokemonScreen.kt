@@ -1,14 +1,23 @@
 package com.lapockett.pokedex.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -87,10 +96,6 @@ fun ListPokemonScreen(
             .padding(horizontal = paddingValues.tiny)
     ) {
         when (val state = listState) {
-            is PokemonListState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-
             is PokemonListState.Success -> {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -130,7 +135,16 @@ fun ListPokemonScreen(
                     }
                 }
             }
-            is PokemonListState.Idle -> Unit
+            is PokemonListState.Loading, is PokemonListState.Idle -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = scrollState
+                ) {
+                    items(20) {
+                        PokemonSkeletonItem()
+                    }
+                }
+            }
         }
     }
 }
@@ -256,5 +270,100 @@ fun PokemonItem(
             }
         }
 
+    }
+}
+
+@Composable
+fun PokemonSkeletonItem() {
+    val paddingValues = LocalPadding.current
+    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "shimmer_alpha"
+    )
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(paddingValues.extraTiny),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(paddingValues.tiny)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(14.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                                RoundedCornerShape(4.dp)
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                                RoundedCornerShape(50.dp)
+                            )
+                    )
+                }
+                Spacer(Modifier.height(paddingValues.tiny))
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                            RoundedCornerShape(8.dp)
+                        )
+                )
+                Spacer(Modifier.height(paddingValues.tiny))
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(16.dp)
+                        .background(
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                            RoundedCornerShape(4.dp)
+                        )
+                )
+                Spacer(Modifier.height(paddingValues.tiny))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(2) {
+                        Box(
+                            modifier = Modifier
+                                .width(60.dp)
+                                .height(24.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                                    RoundedCornerShape(50.dp)
+                                )
+                        )
+                    }
+                }
+                Spacer(Modifier.height(paddingValues.extraTiny))
+            }
+        }
     }
 }
