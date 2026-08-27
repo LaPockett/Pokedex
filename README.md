@@ -3,8 +3,9 @@
 
 Este es un mini-proyecto de una **Pokédex** desarrollado íntegramente como un hobby y ejercicio de aprendizaje. El objetivo principal es explorar y poner en práctica las tecnologías más modernas del ecosistema Android mientras se consume la popular **PokeAPI**.
 
-## 📸 Screenshoots
+## 📸 Screenshoots y preview
 <img src= "docs/screens.jpg" />
+![video](./docs/video.gif)
 
 ## <img src="https://media.giphy.com/media/ObNTw8Uzwy6KQ/giphy.gif" width="30px">&nbsp;***Funcionalidades Principales*** &nbsp;<img src="https://media.giphy.com/media/ObNTw8Uzwy6KQ/giphy.gif" width="30px">
 
