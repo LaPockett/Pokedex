@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.lapockett.pokedex.mappers.toListItemUI
 import com.lapockett.pokedex.model.LocalPadding
+import com.lapockett.pokedex.ui.navigation.Screen
 import com.lapockett.pokedex.viewModel.FavoritePokemonViewModel
 
 @Composable
@@ -38,7 +39,7 @@ fun FavoritesScreen(
     ) {
         if (favorites.isEmpty()) {
             Text(
-                text = "No tienes pokémon favoritos todavía",
+                text = "You don't have any favorite Pokémon yet",
                 modifier = Modifier.align(Alignment.Center)
             )
         } else {

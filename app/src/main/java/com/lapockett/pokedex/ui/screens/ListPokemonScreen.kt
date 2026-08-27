@@ -60,13 +60,12 @@ import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.lapockett.pokedex.databases.data.RetrofitServiceFactory
-import com.lapockett.pokedex.entitie.PokemonEntity
 import com.lapockett.pokedex.mappers.toEntity
-import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.model.PokemonListState
 import com.lapockett.pokedex.model.ui.PokemonListItemUI
 import com.lapockett.pokedex.repository.PokemonRepositoryImpl
+import com.lapockett.pokedex.ui.navigation.Screen
 import com.lapockett.pokedex.utils.formatPokemonId
 import com.lapockett.pokedex.utils.pokemonTypeToColor
 import com.lapockett.pokedex.viewModel.FavoritePokemonViewModel
@@ -161,7 +160,7 @@ fun ListPokemonScreen(
                 is PokemonListState.Success -> {
                     if (effectiveState.data.isEmpty()) {
                         Text(
-                            text = "No se encontraron resultados",
+                            text = "No results were found",
                             modifier = Modifier.align(Alignment.Center)
                         )
                     } else {

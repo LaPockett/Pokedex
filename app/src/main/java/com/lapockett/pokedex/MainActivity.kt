@@ -8,11 +8,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.lifecycleScope
-import com.lapockett.pokedex.databases.data.RetrofitServiceFactory
-import com.lapockett.pokedex.ui.screens.PokedexNavigation
+import com.lapockett.pokedex.ui.navigation.PokedexNavigation
 import com.lapockett.pokedex.ui.theme.PokedexTheme
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
