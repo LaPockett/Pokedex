@@ -1,7 +1,10 @@
 
 <h1 align="center"><img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExN3E4N3RzcjRxc3VvOWlzeG5qOHlqNHlqMXBkeGIwcjB4YnZmdzZiOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/fxTDiduVAhCgnNLaG2/giphy.gif" width="60"/>Pokédex<img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExN3E4N3RzcjRxc3VvOWlzeG5qOHlqNHlqMXBkeGIwcjB4YnZmdzZiOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/fxTDiduVAhCgnNLaG2/giphy.gif" width="60"></h1>
 
-Este es un mini-proyecto de una **Pokeédex** desarrollado íntegramente como un hobby y ejercicio de aprendizaje. El objetivo principal es explorar y poner en práctica las tecnologías más modernas del ecosistema Android mientras se consume la popular **PokeAPI**.
+Este es un mini-proyecto de una **Pokédex** desarrollado íntegramente como un hobby y ejercicio de aprendizaje. El objetivo principal es explorar y poner en práctica las tecnologías más modernas del ecosistema Android mientras se consume la popular **PokeAPI**.
+
+## 📸 Screenshoots
+<img src= "docs/screens.jpg" />
 
 ## ✨ Funcionalidades Principales
 
@@ -44,9 +47,6 @@ Este es un mini-proyecto de una **Pokeédex** desarrollado íntegramente como un
 - **Base de Datos:** Room para el almacenamiento de favoritos.
 - **Gestión de Estado:** Corrutinas de Kotlin y StateFlow.
 - **Dependency Injection:** Inyección manual / Factory pattern.
-
-## 📸 Screenshoots
-<img src= "docs/screens.png" />
 
 ---
 
