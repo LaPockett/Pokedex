@@ -226,7 +226,6 @@ fun PokemonItem(
     viewModelFav: FavoritePokemonViewModel
 ) {
     val paddingValues = LocalPadding.current
-    val colorValues = LocalColors.current
     var isFavorite by remember { mutableStateOf(false) }
     val imageUrl = if (isShiny) {
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemon.id}.png"
@@ -270,7 +269,7 @@ fun PokemonItem(
                         text = formatPokemonId(pokemon.id),
                         fontSize = MaterialTheme.typography.labelLarge.fontSize,
                         fontFamily = MaterialTheme.typography.labelLarge.fontFamily,
-                        color = colorValues.pokemonIdColor
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     IconButton(
                         onClick = {
