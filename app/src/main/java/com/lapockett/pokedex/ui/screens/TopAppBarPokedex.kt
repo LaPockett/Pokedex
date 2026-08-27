@@ -2,6 +2,7 @@ package com.lapockett.pokedex.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,7 +55,8 @@ fun TopAppBarPokedex(
     onToggleShiny: () -> Unit,
     isShiny: Boolean,
     viewModelFav: FavoritePokemonViewModel,
-    navController: NavController
+    navController: NavController,
+    currentRoute: String?
 ) {
     val paddingValues = LocalPadding.current
     val favorites by viewModelFav.favoritePokemon.collectAsState()
@@ -62,20 +64,31 @@ fun TopAppBarPokedex(
         favorites.size < 10 -> favorites.size.toString()
         else -> "10+"
     }
+    val goToMain = {
+        navController.navigate(Screen.Main.route) {
+            popUpTo(Screen.Main.route) {
+                inclusive = false
+            }
+            launchSingleTop = true
+        }
+    }
     TopAppBar(
-        navigationIcon = {
-            Image(
-                painter = painterResource(id = R.drawable.pokeball),
-                contentDescription = "Pokeball",
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(start = paddingValues.tiny)
-            )
+        navigationIcon =  {
+            IconButton(
+                onClick = goToMain
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.pokeball),
+                    contentDescription = "Go to main",
+                    modifier = Modifier.size(40.dp).padding(start = paddingValues.extraTiny)
+                )
+            }
         },
         title = {
             Text(
                 text = stringResource(id = R.string.app_name),
-                modifier = Modifier.padding(start = paddingValues.big)
+                modifier = Modifier.padding(start = paddingValues.extraTiny)
+                    .clickable { goToMain() }
             )
         },
         modifier = Modifier.fillMaxWidth(),
@@ -110,9 +123,11 @@ fun TopAppBarPokedex(
                 }) {
                     IconButton(
                         onClick = {
-                            navController.navigate(Screen.Favorites.route)
-
-                        }
+                            navController.navigate(Screen.Favorites.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        enabled = currentRoute != Screen.Favorites.route
                     ) {
                         Icon(
                             Icons.Filled.FavoriteBorder,
@@ -147,7 +162,9 @@ fun PokedexNavigation(
             onToggleShiny = onToggleShiny,
             isShiny = isShiny,
             viewModelFav = viewModelFav,
-            navController = navController) },
+            navController = navController,
+            currentRoute = currentRoute
+        ) },
         contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {
             if (scrollState.firstVisibleItemIndex > 0 && currentRoute == Screen.Main.route) {
