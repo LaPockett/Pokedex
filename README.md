@@ -6,7 +6,7 @@ Este es un mini-proyecto de una **Pokédex** desarrollado íntegramente como un 
 ## 📸 Screenshoots
 <img src= "docs/screens.jpg" />
 
-## ✨ Funcionalidades Principales
+## <img src="https://media.giphy.com/media/ObNTw8Uzwy6KQ/giphy.gif" width="30px">&nbsp;***Funcionalidades Principales*** &nbsp;<img src="https://media.giphy.com/media/ObNTw8Uzwy6KQ/giphy.gif" width="30px">
 
 ### 1. Exploración de Pokémon
 
