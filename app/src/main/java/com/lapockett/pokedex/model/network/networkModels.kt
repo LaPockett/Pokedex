@@ -20,7 +20,13 @@ data class PokemonNetworkModel(
     val base_experience: Int,
     val types: List<TypeSlotNetwork>,
     val stats: List<StatSlotNetwork>,
-    val abilities: List<AbilitySlotNetwork>
+    val abilities: List<AbilitySlotNetwork>,
+    val cries: CriesNetwork
+)
+
+data class CriesNetwork(
+    val latest: String,
+    val legacy: String
 )
 
 data class TypeSlotNetwork(

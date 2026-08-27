@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.viewModel.FavoritePokemonViewModel
@@ -132,6 +133,8 @@ fun PokedexNavigation(
     val scrollState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     val viewModelFav = remember { FavoritePokemonViewModel(context) }
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStack?.destination?.route
     Scaffold(
         topBar = { TopAppBarPokedex(
             isDarkTheme = isDarkTheme,
@@ -141,7 +144,7 @@ fun PokedexNavigation(
             viewModelFav = viewModelFav) },
         contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {
-            if (scrollState.firstVisibleItemIndex > 0) {
+            if (scrollState.firstVisibleItemIndex > 0 && currentRoute == Screen.Main.route) {
                 FloatingActionButton(
                     onClick = {
                        coroutineScope.launch {

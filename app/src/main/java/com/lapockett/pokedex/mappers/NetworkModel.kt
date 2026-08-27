@@ -2,6 +2,7 @@ package com.lapockett.pokedex.mappers
 
 import com.lapockett.pokedex.model.network.PokemonNetworkModel
 import com.lapockett.pokedex.model.ui.AbilityUI
+import com.lapockett.pokedex.model.ui.CriesUI
 import com.lapockett.pokedex.model.ui.PokemonDetailsUI
 import com.lapockett.pokedex.model.ui.PokemonListItemUI
 import com.lapockett.pokedex.model.ui.StatUI
@@ -38,7 +39,11 @@ fun PokemonNetworkModel.toDetailsUI(): PokemonDetailsUI {
                 isHidden = it.is_hidden,
                 slot = it.slot
             )
-        }
+        },
+        cries = CriesUI(
+            latest = cries.latest,
+            legacy = cries.legacy
+        )
     )
 }
 

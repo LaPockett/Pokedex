@@ -71,5 +71,6 @@ dependencies {
     annotationProcessor(libs.room.compiler)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     ksp(libs.room.compiler)
 }

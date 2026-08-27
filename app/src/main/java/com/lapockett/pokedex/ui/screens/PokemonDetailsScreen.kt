@@ -1,6 +1,9 @@
 package com.lapockett.pokedex.ui.screens
 
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +19,13 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Hearing
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -23,18 +33,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -58,6 +73,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
     val detailState by viewModel.detailState.collectAsState()
     val colorValues = LocalColors.current
     val paddingValues = LocalPadding.current
+    val context = LocalContext.current
 
     LaunchedEffect(pokemonId) {
         viewModel.loadPokemonDetails(pokemonId)
@@ -69,6 +85,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
                 CircularProgressIndicator()
             }
         }
+
         is PokemonDetailState.Error -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -79,6 +96,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
                 }
             }
         }
+
         is PokemonDetailState.Success -> {
             val pokemon = state.data
 
@@ -130,10 +148,42 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
+                            var isPlaying by remember { mutableStateOf(false) }
+                            val mediaPlayer = remember {
+                                MediaPlayer().apply {
+                                    setAudioAttributes(
+                                        AudioAttributes.Builder()
+                                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                                            .build()
+                                    )
+                                    setDataSource(pokemon.cries.latest)
+                                    prepareAsync()
+                                    setOnPreparedListener {
+                                        //start()
+                                    }
+                                    setOnCompletionListener {
+                                        seekTo(0)
+                                        isPlaying = false
+                                    }
+                                }
+                            }
+                            DisposableEffect(Unit) {
+                                onDispose {
+                                    mediaPlayer.release()
+                                }
+                            }
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = "Pokémon ${pokemon.name}",
-                                modifier = Modifier.size(216.dp),
+                                modifier = Modifier
+                                    .size(216.dp)
+                                    .clickable(
+                                        onClick = {
+                                            mediaPlayer.start()
+                                            isPlaying = true
+                                        },
+                                    ),
                                 onError = {
                                     println("Error loading image: ${it.result.throwable.message}")
                                 }
@@ -172,6 +222,7 @@ fun PokemonDetailsScreen(pokemonId: Int, isShiny: Boolean) {
                                 )
                             )
                         }
+
                     }
                     Row(
                         modifier = Modifier.fillMaxSize(),

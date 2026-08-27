@@ -42,8 +42,9 @@ class PokemonVM(
 
         viewModelScope.launch {
             _isLoading.value = true
-            _listState.value = PokemonListState.Loading
-
+            if (loadedPokemon.isEmpty()){
+                _listState.value = PokemonListState.Loading
+            }
             try {
                 val listResponse = repository.getRawPokemonPage(offset, limit)
 
