@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class FavoritePokemonViewModel(
-    private val context: Context
+    context: Context
 ) : ViewModel() {
 
     private val database = PokemonFavDatabase.getDatabase(context)

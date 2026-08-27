@@ -6,13 +6,15 @@ import com.lapockett.pokedex.model.PokemonDetailState
 import com.lapockett.pokedex.model.PokemonListState
 import com.lapockett.pokedex.model.ui.PokemonListItemUI
 import com.lapockett.pokedex.repository.PokemonRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
+import kotlin.time.Duration.Companion.milliseconds
 
 class PokemonVM(
     private val repository: PokemonRepository
@@ -23,6 +25,12 @@ class PokemonVM(
 
     private val _detailState = MutableStateFlow<PokemonDetailState>(PokemonDetailState.Idle)
     val detailState: StateFlow<PokemonDetailState> = _detailState.asStateFlow()
+
+    private var allPokemonNames: List<String>? = null
+    private var searchJob: Job? = null
+
+    private val _searchState = MutableStateFlow<PokemonListState>(PokemonListState.Idle)
+    val searchState: StateFlow<PokemonListState> = _searchState.asStateFlow()
 
     private val limit = 20
     private var offset = 0
@@ -36,7 +44,39 @@ class PokemonVM(
     init {
         loadPokemon()
     }
+    fun search(query: String) {
+        searchJob?.cancel()
 
+        if (query.isBlank()) {
+            _searchState.value = PokemonListState.Idle
+            return
+        }
+
+        searchJob = viewModelScope.launch {
+            delay(300.milliseconds)
+            _searchState.value = PokemonListState.Loading
+            try {
+                val names = allPokemonNames ?: repository
+                    .getRawPokemonPage(offset = 0, limit = 100000)
+                    .also { allPokemonNames = it }
+
+                val matches = names.filter { it.startsWith(query, ignoreCase = true) }
+
+                val detailed = matches.map { name ->
+                    async { repository.getPokemonByName(name) }
+                }.awaitAll()
+
+                _searchState.value = PokemonListState.Success(
+                    data = detailed,
+                    canLoadMore = false
+                )
+            } catch (e: Exception) {
+                _searchState.value = PokemonListState.Error(
+                    e.message ?: "ERROR buscando pokémon"
+                )
+            }
+        }
+    }
     fun loadPokemon() {
         if (_isLoading.value || !hasMore) return
 

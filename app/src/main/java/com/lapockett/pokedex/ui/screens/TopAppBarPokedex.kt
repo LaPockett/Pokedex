@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
@@ -52,7 +53,8 @@ fun TopAppBarPokedex(
     onToggleTheme: () -> Unit,
     onToggleShiny: () -> Unit,
     isShiny: Boolean,
-    viewModelFav: FavoritePokemonViewModel
+    viewModelFav: FavoritePokemonViewModel,
+    navController: NavController
 ) {
     val paddingValues = LocalPadding.current
     val favorites by viewModelFav.favoritePokemon.collectAsState()
@@ -107,7 +109,10 @@ fun TopAppBarPokedex(
                     }
                 }) {
                     IconButton(
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            navController.navigate(Screen.Favorites.route)
+
+                        }
                     ) {
                         Icon(
                             Icons.Filled.FavoriteBorder,
@@ -141,7 +146,8 @@ fun PokedexNavigation(
             onToggleTheme = onToggleTheme,
             onToggleShiny = onToggleShiny,
             isShiny = isShiny,
-            viewModelFav = viewModelFav) },
+            viewModelFav = viewModelFav,
+            navController = navController) },
         contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {
             if (scrollState.firstVisibleItemIndex > 0 && currentRoute == Screen.Main.route) {
@@ -178,7 +184,14 @@ fun PokedexNavigation(
                     viewModelFav = viewModelFav
                 )
             }
-
+            composable(Screen.Favorites.route) {
+                FavoritesScreen(
+                    navController = navController,
+                    scrollState = scrollState,
+                    viewModelFav = viewModelFav,
+                    isShiny = isShiny
+                )
+            }
             composable(
                 route = Screen.Detail.route,
                 arguments = listOf(

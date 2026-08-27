@@ -1,5 +1,6 @@
 package com.lapockett.pokedex.mappers
 
+import com.lapockett.pokedex.entitie.PokemonEntity
 import com.lapockett.pokedex.model.network.PokemonNetworkModel
 import com.lapockett.pokedex.model.ui.AbilityUI
 import com.lapockett.pokedex.model.ui.CriesUI
@@ -7,6 +8,26 @@ import com.lapockett.pokedex.model.ui.PokemonDetailsUI
 import com.lapockett.pokedex.model.ui.PokemonListItemUI
 import com.lapockett.pokedex.model.ui.StatUI
 import com.lapockett.pokedex.model.ui.TypeUI
+
+fun PokemonEntity.toListItemUI(): PokemonListItemUI {
+    return PokemonListItemUI(
+        id = id,
+        name = name.orEmpty(),
+        imageUrl = imageUrl.orEmpty(),
+        types = types.mapIndexed { index, typeName ->
+            TypeUI(slot = index + 1, name = typeName)
+        }
+    )
+}
+
+fun PokemonListItemUI.toEntity(): PokemonEntity {
+    return PokemonEntity(
+        id = id,
+        name = name,
+        imageUrl = imageUrl,
+        types = types.map { it.name }
+    )
+}
 
 fun PokemonNetworkModel.toListItemUI(): PokemonListItemUI {
     return PokemonListItemUI(

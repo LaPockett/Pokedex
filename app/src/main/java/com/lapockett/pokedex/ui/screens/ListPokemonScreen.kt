@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -27,8 +29,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -38,6 +42,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,11 +54,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.lapockett.pokedex.databases.data.RetrofitServiceFactory
 import com.lapockett.pokedex.entitie.PokemonEntity
+import com.lapockett.pokedex.mappers.toEntity
 import com.lapockett.pokedex.model.LocalColors
 import com.lapockett.pokedex.model.LocalPadding
 import com.lapockett.pokedex.model.PokemonListState
@@ -78,71 +86,131 @@ fun ListPokemonScreen(
     val viewModel = remember { PokemonVM(repository) }
 
     val listState by viewModel.listState.collectAsState()
+    val searchState by viewModel.searchState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-
+    var searchQuery by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    // Forzar que el foco se quite de la barra de búsqueda cuando hago scroll
     LaunchedEffect(scrollState) {
-        snapshotFlow { scrollState.layoutInfo }
-            .collect { layoutInfo ->
-                val totalItems = layoutInfo.totalItemsCount
-                val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                if (lastVisibleIndex >= totalItems - 14) {
-                    viewModel.loadPokemon()
+        snapshotFlow { scrollState.isScrollInProgress }
+            .collect { isScrolling ->
+                if (isScrolling) {
+                    focusManager.clearFocus()
                 }
             }
     }
-    Box(
+    LaunchedEffect(searchQuery) {
+        viewModel.search(searchQuery)
+    }
+    LaunchedEffect(scrollState, searchQuery) {
+        snapshotFlow { scrollState.layoutInfo }
+            .collect { layoutInfo ->
+                if (searchQuery.isBlank()) {
+                    val totalItems = layoutInfo.totalItemsCount
+                    val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    if (lastVisibleIndex >= totalItems - 14) {
+                        viewModel.loadPokemon()
+                    }
+                }
+            }
+    }
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = paddingValues.tiny)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })
+            } // Forzar que el foco se quite de la barra de búsqueda cuando hago click fuera de ella
     ) {
-        when (val state = listState) {
-            is PokemonListState.Success -> {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    state = scrollState
-                ) {
-                    items(items = state.data) { pokemon ->
-                        PokemonItem(
-                            pokemon,
-                            isShiny = isShiny,
-                            onClick = { navController.navigate(Screen.Detail.createRoute(pokemon.id)) },
-                            viewModelFav = viewModelFav
+        // FIJO, SIEMPRE SE VE
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Search") },
+            singleLine = true,
+            shape = RoundedCornerShape(24.dp),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search"
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotBlank()) {
+                    IconButton(onClick = { searchQuery = "" }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Clear"
                         )
                     }
-                    if (isLoading){
-                        item(span = { GridItemSpan(2) }) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = paddingValues.extraTiny)
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            val effectiveState = if (searchQuery.isBlank()) listState else searchState
+            when (effectiveState) {
+                is PokemonListState.Success -> {
+                    if (effectiveState.data.isEmpty()) {
+                        Text(
+                            text = "No se encontraron resultados",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            state = scrollState
+                        ) {
+                            items(items = effectiveState.data, key = { it.id }) { pokemon ->
+                                PokemonItem(
+                                    pokemon,
+                                    isShiny = isShiny,
+                                    onClick = { navController.navigate(Screen.Detail.createRoute(pokemon.id)) },
+                                    viewModelFav = viewModelFav
+                                )
+                            }
+                            if (isLoading && searchQuery.isBlank()) {
+                                item(span = { GridItemSpan(2) }) {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-
-            is PokemonListState.Error -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
+                is PokemonListState.Error -> {
+                    Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = state.message, color = MaterialTheme.colorScheme.error)
+                    Text(text = effectiveState.message, color = MaterialTheme.colorScheme.error)
                     Button(onClick = { viewModel.retryLoadPokemon() }) {
                         Text("Reintentar")
                     }
-                }
-            }
-            is PokemonListState.Loading, is PokemonListState.Idle -> {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    state = scrollState
-                ) {
-                    items(20) {
-                        PokemonSkeletonItem()
+                } }
+                is PokemonListState.Loading, is PokemonListState.Idle -> {
+                    if (searchQuery.isBlank()) {
+                        LazyVerticalGrid(columns = GridCells.Fixed(2), state = scrollState) {
+                            items(20) { PokemonSkeletonItem() }
+                        }
+                    } else {
+                        LazyVerticalGrid(columns = GridCells.Fixed(2), state = scrollState) {
+                            items(20) { PokemonSkeletonItem() }
+                        }
                     }
                 }
             }
@@ -207,15 +275,10 @@ fun PokemonItem(
                     IconButton(
                         onClick = {
                             isFavorite = !isFavorite
-                            val pokemonEntity = PokemonEntity(
-                                id = pokemon.id,
-                                name = pokemon.name,
-                                imageUrl = pokemon.imageUrl
-                            )
                             if (isFavorite) {
-                                viewModelFav.addFavoritePokemon(pokemonEntity)
+                                viewModelFav.addFavoritePokemon(pokemon.toEntity())
                             } else {
-                                viewModelFav.removeFavoritePokemon(pokemonEntity)
+                                viewModelFav.removeFavoritePokemon(pokemon.toEntity())
                             }
                         }
                     ) {
